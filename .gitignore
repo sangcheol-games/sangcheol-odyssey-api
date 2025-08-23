@@ -1,5 +1,5 @@
-# Created by https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
+# Created by https://www.toptal.com/developers/gitignore/api/python,redis,visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=python,redis,visualstudiocode
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -173,6 +173,11 @@ poetry.toml
 # LSP config files
 pyrightconfig.json
 
+### Redis ###
+# Ignore redis binary dump (dump.rdb) files
+
+*.rdb
+
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json
@@ -192,4 +197,6 @@ pyrightconfig.json
 .history
 .ionide
 
-# End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode
+*.patch
+
+# End of https://www.toptal.com/developers/gitignore/api/python,redis,visualstudiocode
