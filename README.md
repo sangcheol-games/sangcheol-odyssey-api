@@ -74,7 +74,6 @@ uv run serve
   ```bash
   curl http://localhost:8000/health       # {"message":"healthy"}
   curl http://localhost:8000/v1/ping      # {"message":"pong"}
-````
 
 **WSL 사용 시(예외 처리)**
 
