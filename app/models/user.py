@@ -1,13 +1,13 @@
 from __future__ import annotations
-from datetime import datetime
 import uuid
-
+from datetime import datetime
 from sqlalchemy import String, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 from app.db.mixins import TimestampedMixin, _uuid4
+from app.models.identity import Identity
 
 class User(Base, TimestampedMixin):
     __tablename__ = "user"
@@ -16,3 +16,7 @@ class User(Base, TimestampedMixin):
     email: Mapped[str | None] = mapped_column(String(320), index=True, nullable=True)
     name: Mapped[str | None] = mapped_column(String(100))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    identities: Mapped[list[Identity]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
