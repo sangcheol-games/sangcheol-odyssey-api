@@ -1,3 +1,5 @@
 from app.db.base_class import Base
 from app.models.user import User
 from app.models.identity import Identity
+
+target_metadata = Base.metadata
