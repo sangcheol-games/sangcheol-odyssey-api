@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.116.1",
     "httpx>=0.28.1",
     "orjson>=3.11.2",
+    "psycopg[binary]>=3.2.9",
     "pydantic-settings>=2.10.1",
     "pyjwt[crypto]>=2.10.1",
     "python-multipart>=0.0.20",
@@ -34,6 +35,14 @@ build-backend = "hatchling.build"
 [project.scripts]
 dev = "scripts.cli:start_dev_server"
 serve = "scripts.cli:start_prod_server"
+migrate = "scripts.cli:run_migrations"
+migrate-down = "scripts.cli:rollback_migration"
+migrate-create = "scripts.cli:create_migration"
+init-db = "scripts.cli:initialize_db"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app", "scripts"]
+
+[tool.uv.workspace]
+members = ["."]
+exclude = ["alembic"]
