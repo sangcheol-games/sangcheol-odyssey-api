@@ -29,4 +29,4 @@ class Identity(Base, TimestampedMixin):
 
     profile_json: Mapped[dict | None] = mapped_column(JSONB)
 
-    user = relationship("User", back_populates="identities")
+    user = relationship("User", back_populates="identities", lazy="selectin", )

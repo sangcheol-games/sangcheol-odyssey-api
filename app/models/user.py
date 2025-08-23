@@ -18,5 +18,5 @@ class User(Base, TimestampedMixin):
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     identities: Mapped[list[Identity]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
+        back_populates="user", cascade="all, delete-orphan", lazy="selectin", 
     )
