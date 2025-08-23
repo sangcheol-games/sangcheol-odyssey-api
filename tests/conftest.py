@@ -2,7 +2,10 @@ import psycopg
 import pytest
 from alembic.config import Config
 from alembic import command
+import pytest_asyncio
 from app.core.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 def _urls():
     base = f"{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}"
@@ -39,7 +42,7 @@ def _drop_db(db_name, admin_url):
 
 @pytest.fixture(scope="session", autouse=True)
 def _setup_db():
-    db_name, sync_url, _, admin_url = _urls()
+    db_name, sync_url, async_url, admin_url = _urls()
     _create_db(db_name, admin_url)
     cfg = Config("alembic.ini")
     cfg.set_main_option("sqlalchemy.url", sync_url)
@@ -47,7 +50,25 @@ def _setup_db():
     yield
     _drop_db(db_name, admin_url)
 
+
 @pytest.fixture()
 def test_db_url():
     _, _, async_url, _ = _urls()
     return async_url
+
+@pytest_asyncio.fixture
+async def async_engine():
+    _, _, async_url, _ = _urls()
+    engine = create_async_engine(async_url, future=True)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+@pytest_asyncio.fixture
+async def async_session(test_db_url):
+    engine = create_async_engine(test_db_url)
+    session_factory = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    async with session_factory() as session:
+        yield session
+    await engine.dispose()

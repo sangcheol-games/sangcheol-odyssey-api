@@ -1,6 +1,6 @@
 import asyncio
 import sys
-import alembic
+import alembic.config
 import uvicorn
 
 def start_dev_server() -> None:
