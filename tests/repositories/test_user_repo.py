@@ -1,5 +1,5 @@
 import pytest
-import app.db.base  # noqa: F401
+import app.db.base_class  # noqa: F401
 from app.models.user import User
 from app.repositories.user_repo import UserRepository
 

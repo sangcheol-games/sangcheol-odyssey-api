@@ -1,6 +1,6 @@
 import uuid
 import pytest
-import app.db.base  # noqa: F401
+import app.db.base_class  # noqa: F401
 from app.models.user import User
 from app.models.identity import Identity, Provider
 
