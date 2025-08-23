@@ -11,8 +11,6 @@ from app.db.mixins import TimestampedMixin, _uuid4
 class Provider(StrEnum):
     google = "google"
     steam = "steam"
-    github = "github"
-    discord = "discord"
 
 class Identity(Base, TimestampedMixin):
     __tablename__ = "identity"
