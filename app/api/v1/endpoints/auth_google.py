@@ -17,7 +17,7 @@ async def google_exchange(
 ) -> TokenResponse:
     token_resp = await exchange_google_token(
         GoogleTokenRequest(
-            client_id=settings.GOOGLE_CLIENT_ID,
+            client_id=settings.google_client_id_list[0],
             client_secret=getattr(settings, "GOOGLE_CLIENT_SECRET", None),
             code=body.code,
             redirect_uri=settings.GOOGLE_REDIRECT_URI,
