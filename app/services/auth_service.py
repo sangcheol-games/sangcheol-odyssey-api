@@ -32,6 +32,8 @@ async def exchange_google_token(req: GoogleTokenRequest) -> GoogleTokenResponse:
 
 async def verify_google_id_token(id_token: str) -> GoogleIdClaims:
     jwks = await _jwks_cache.get()
+    if not isinstance(jwks, dict) or "keys" not in jwks:
+        raise HTTPException(status_code=503, detail="JWKS not available")
     keyset = JsonWebKey.import_key_set(jwks)
 
     audiences = settings.google_client_id_list

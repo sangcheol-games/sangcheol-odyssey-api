@@ -69,6 +69,7 @@ uv run serve
 
 ### 6. 테스트 & Docs 페이지
 
+- `uv run pytest`
 - `uv run dev` 후  **http://localhost:8000/docs** 접속 (API docs page)
 - 브라우저 접속이 안 되면 터미널에서 확인:
   ```bash
