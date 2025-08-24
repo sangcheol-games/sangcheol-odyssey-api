@@ -55,8 +55,8 @@ docker compose up -d db redis
 
 ### 4. DB Migration
 ```bash
-# DB 마이그레이션 최신화
-uv run alembic upgrade head
+uv run init-db     # 데이터베이스 초기화
+uv run migrate     # 마이그레이션 적용
 ```
 
 ### 5. Run
@@ -89,11 +89,11 @@ uv run serve
 
 ---
 
-## Label Setup (Hub 중앙 관리)
+## Label Setup (Hub 중앙 관리) (자동 안됐을 경우)
 
 라벨은 **sangcheol-odyssey-hub**에서 중앙 관리합니다.  
 부트스트랩을 실행하면 자동으로 라벨이 동기화됩니다.  
-수동으로 실행하려면:
+문제가 있어 수동으로 실행하려면:
 
 ```bash
 git clone https://github.com/sangcheol-games/sangcheol-odyssey-hub.git
