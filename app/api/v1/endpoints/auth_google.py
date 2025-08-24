@@ -13,7 +13,7 @@ router = APIRouter(prefix="/auth/google", tags=["auth"])
 @router.post("/exchange", response_model=TokenResponse)
 async def google_exchange(
     body: ExchangeRequest,
-    db: app.db.base_class = Depends(get_session),
+    db: AsyncSession = Depends(get_session),
 ) -> TokenResponse:
     token_resp = await exchange_google_token(
         GoogleTokenRequest(
