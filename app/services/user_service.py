@@ -19,8 +19,9 @@ UID_MIN: Final[int] = 100_000_000
 UID_MAX: Final[int] = 9_999_999_999
 UID_RETRY_MAX: Final[int] = 10
 
-NICKNAME_RE = re.compile(r"^[A-Za-z0-9가-힣_.-]{2,16}$")
-
+NICKNAME_RE = re.compile(
+    r"^[A-Za-z0-9가-힣ぁ-ゟ゠-ヿ一-龯_.-]{2,16}$"
+)
 
 def _gen_numeric_uid() -> str:
     span = UID_MAX - UID_MIN + 1
