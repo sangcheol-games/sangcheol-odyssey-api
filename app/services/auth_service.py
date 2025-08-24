@@ -3,6 +3,7 @@ import httpx
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from authlib.jose import JsonWebToken, JsonWebKey
+from redis.asyncio import from_url as redis_from_url
 
 from app.schemas.google_oauth import GoogleTokenRequest, GoogleTokenResponse, GoogleIdClaims
 from app.schemas.auth_io import TokenResponse
@@ -78,15 +79,14 @@ async def handle_google_login(db: AsyncSession, claims: GoogleIdClaims) -> Token
 
     access_token = issue_access_token(user_id)
 
-    r = get_redis()
     plain = generate_refresh_plain()
     h = hash_refresh(plain)
     key = redis_token_key(h)
     record = {"user_id": user_id, "iat": now_ts(), "exp": exp_ts()}
-    await r.setex(key, int(settings.REFRESH_EXPIRES_SEC), to_json(record))
-    await r.sadd(redis_user_set_key(user_id), h)
+    async with redis_from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True) as r:
+        await r.setex(key, int(settings.REFRESH_EXPIRES_SEC), to_json(record))
+        await r.sadd(redis_user_set_key(user_id), h)
 
-    await db.commit()
     return TokenResponse(
         access_token=access_token,
         refresh_token=plain,
@@ -98,18 +98,18 @@ async def rotate_refresh_and_issue(db: AsyncSession, refresh_plain: str) -> Toke
     if not refresh_plain:
         raise HTTPException(status_code=400, detail="missing refresh_token")
 
-    r = get_redis()
     h = hash_refresh(refresh_plain)
     key = redis_token_key(h)
 
-    record_json = await r.getdel(key)
-    if not record_json:
-        raise HTTPException(status_code=401, detail="invalid or used refresh_token")
+    async with redis_from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True) as r:
+        record_json = await r.getdel(key)
+        if not record_json:
+            raise HTTPException(status_code=401, detail="invalid or used refresh_token")
 
-    rec = from_json(record_json)
-    user_id = rec["user_id"]
+        rec = from_json(record_json)
+        user_id = rec["user_id"]
 
-    await r.srem(redis_user_set_key(user_id), h)
+        await r.srem(redis_user_set_key(user_id), h)
 
     access = issue_access_token(user_id)
 
@@ -117,8 +117,9 @@ async def rotate_refresh_and_issue(db: AsyncSession, refresh_plain: str) -> Toke
     new_h = hash_refresh(new_plain)
     new_key = redis_token_key(new_h)
     new_rec = {"user_id": user_id, "iat": now_ts(), "exp": exp_ts()}
-    await r.setex(new_key, int(settings.REFRESH_EXPIRES_SEC), to_json(new_rec))
-    await r.sadd(redis_user_set_key(user_id), new_h)
+    async with redis_from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True) as r:
+        await r.setex(new_key, int(settings.REFRESH_EXPIRES_SEC), to_json(new_rec))
+        await r.sadd(redis_user_set_key(user_id), new_h)
 
     await db.commit()
     return TokenResponse(
@@ -129,13 +130,13 @@ async def rotate_refresh_and_issue(db: AsyncSession, refresh_plain: str) -> Toke
     )
 
 async def logout_all_refresh(user_id: str) -> dict:
-    r = get_redis()
     set_key = redis_user_set_key(user_id)
-    hashes = await r.smembers(set_key)
-    if hashes:
-        pipe = r.pipeline()
-        for h in hashes:
-            pipe.delete(redis_token_key(h))
-        pipe.delete(set_key)
-        await pipe.execute()
+    async with redis_from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True) as r:
+        hashes = await r.smembers(set_key)
+        if hashes:
+            pipe = r.pipeline()
+            for h in hashes:
+                pipe.delete(redis_token_key(h))
+            pipe.delete(set_key)
+            await pipe.execute()
     return {"message": "ok"}
