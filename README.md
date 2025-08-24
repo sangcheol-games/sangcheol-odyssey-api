@@ -7,7 +7,7 @@ FastAPI backend for Sangcheol Odyssey. Uses **uv** for Python env + deps.
 
 ---
 
-## 🚀 One-Click Setup (권장)
+## One-Click Setup
 
 ```bash
 # 레포 클론 후 프로젝트 루트에서
@@ -26,14 +26,14 @@ bash scripts/bootstrap.sh --org sangcheol-games --repo sangcheol-odyssey-api
 
 ---
 
-## 🧩 Manual Setup (대안)
+## Manual Setup
 
 ### Requirements
 - Python 3.12+
 - Docker & Docker Compose
 - uv: https://docs.astral.sh/uv/
 
-### 1) Setup
+### 1. Setup
 ```bash
 # 가상환경에 Python 설치
 uv python install 3.12
@@ -41,25 +41,25 @@ uv python install 3.12
 uv sync
 ```
 
-### 2) Configure
+### 2. Configure
 ```bash
 # sample 파일 복사한 .env파일에서 필요한 값 수정
 cp .env.example .env
 ```
 
-### 3) Infra (DB, Redis)
+### 3. Infra (DB, Redis)
 ```bash
 # DB(postgres, redis) 시작
 docker compose up -d db redis
 ```
 
-### 4) DB Migration
+### 4. DB Migration
 ```bash
-# DB 마이그레이션 최신화
-uv run alembic upgrade head
+uv run init-db     # 데이터베이스 초기화
+uv run migrate     # 마이그레이션 적용
 ```
 
-### 5) Run
+### 5. Run
 ```bash
 # 파일 변경사항 있을때마다 리로드
 uv run dev     
@@ -67,8 +67,9 @@ uv run dev
 uv run serve
 ```
 
-### 6) 테스트 & Docs 페이지
+### 6. 테스트 & Docs 페이지
 
+- `uv run pytest`
 - `uv run dev` 후  **http://localhost:8000/docs** 접속 (API docs page)
 - 브라우저 접속이 안 되면 터미널에서 확인:
   ```bash
@@ -88,11 +89,11 @@ uv run serve
 
 ---
 
-## 🏷 Label Setup (Hub 중앙 관리)
+## Label Setup (Hub 중앙 관리) (자동 안됐을 경우)
 
 라벨은 **sangcheol-odyssey-hub**에서 중앙 관리합니다.  
 부트스트랩을 실행하면 자동으로 라벨이 동기화됩니다.  
-수동으로 실행하려면:
+문제가 있어 수동으로 실행하려면:
 
 ```bash
 git clone https://github.com/sangcheol-games/sangcheol-odyssey-hub.git
@@ -104,7 +105,11 @@ bash sangcheol-odyssey-hub/scripts/setup-labels.sh sangcheol-games sangcheol-ody
 
 ---
 
-## 🛠 Scripts
+## Scripts
 
-- `uv run dev` → 개발 서버(reload)
-- `uv run serve` → 프로덕션 스타일 실행
+- `uv run dev` : 개발 서버(reload)
+- `uv run serve` : 프로덕션 스타일 실행
+- `uv run init-db` : DB 초기 세팅
+- `uv run migrate-create "msg"` : 새 마이그레이션 생성
+- `uv run migrate` : 최신으로 반영
+- `uv run migrate-down` : 하나 롤백

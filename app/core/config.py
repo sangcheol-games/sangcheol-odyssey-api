@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/v1"
 
     DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
+    DB_PORT: int = 55432
     DB_USER: str = "postgres"
     DB_PASSWORD: str = "postgres"
     DB_NAME: str = "sangcheol"
@@ -20,13 +20,26 @@ class Settings(BaseSettings):
     JWT_SECRET: str = "change-me"
     JWT_EXPIRES_SEC: int = 3600
 
+    GOOGLE_CLIENT_IDS: str = ""
+    GOOGLE_CLIENT_SECRET: str | None = None # 웹 클라에만 필요
+
     @property
     def db_url_async(self) -> str:
-        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return (
+            f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
 
     @property
     def db_url_sync(self) -> str:
-        return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return (
+            f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+    @property
+    def google_client_id_list(self) -> list[str]:
+        return [s.strip() for s in self.GOOGLE_CLIENT_IDS.split(",") if s.strip()]
 
 
 settings = Settings()

@@ -5,7 +5,7 @@ from sqlalchemy import String, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base_class import Base
 from app.db.mixins import TimestampedMixin, _uuid4
 
 class Provider(StrEnum):
