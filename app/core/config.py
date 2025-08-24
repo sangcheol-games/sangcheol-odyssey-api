@@ -22,6 +22,8 @@ class Settings(BaseSettings):
 
     GOOGLE_CLIENT_IDS: str = ""
     GOOGLE_CLIENT_SECRET: str | None = None # 웹 클라에만 필요
+    GOOGLE_REDIRECT_URI: str | None = None # 웹 클라에만 필요
+    GOOGLE_CLIENT_ID_WEB: str | None = None # 웹 클라에만 필요
 
     @property
     def db_url_async(self) -> str:

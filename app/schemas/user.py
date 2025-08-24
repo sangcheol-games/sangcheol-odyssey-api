@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from app.schemas.timestamped_mixin import TimestampedMixin
 
 class UserBase(BaseModel):
-    uid: str = Field(...)
+    uid: str | None = Field(...)
     nickname: str | None = None
 
 class UserCreate(UserBase):

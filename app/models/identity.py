@@ -16,6 +16,7 @@ class Identity(Base, TimestampedMixin):
     __tablename__ = "identity"
     __table_args__ = (
         UniqueConstraint("provider", "provider_sub", name="uq_identity_provider_sub"),
+        UniqueConstraint("user_id", "provider", name="uq_identity_user_provider"),        
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid4)

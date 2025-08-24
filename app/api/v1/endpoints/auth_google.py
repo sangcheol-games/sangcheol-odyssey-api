@@ -15,15 +15,16 @@ async def google_exchange(
     body: ExchangeRequest,
     db: AsyncSession = Depends(get_session),
 ) -> TokenResponse:
-    token_resp = await exchange_google_token(
-        GoogleTokenRequest(
-            client_id=settings.google_client_id_list[0],
-            client_secret=getattr(settings, "GOOGLE_CLIENT_SECRET", None),
-            code=body.code,
-            redirect_uri=settings.GOOGLE_REDIRECT_URI,
-            code_verifier=body.code_verifier,
-        )
-    )
+    client_id = settings.GOOGLE_CLIENT_ID_WEB or (settings.google_client_id_list[0] if settings.google_client_id_list else None)
+    if not client_id or not settings.GOOGLE_REDIRECT_URI:
+        raise HTTPException(status_code=500, detail="SERVER_MISCONFIG: GOOGLE_CLIENT_ID/REDIRECT_URI")
+    token_resp = await exchange_google_token(GoogleTokenRequest(
+        client_id=client_id,
+        client_secret=getattr(settings, "GOOGLE_CLIENT_SECRET", None),
+        code=body.code,
+        redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        code_verifier=body.code_verifier,
+    ))
     if not token_resp.id_token:
         raise HTTPException(status_code=400, detail="no id_token from google")
     claims = await verify_google_id_token(token_resp.id_token)
