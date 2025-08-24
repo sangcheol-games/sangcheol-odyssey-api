@@ -6,6 +6,9 @@ import pytest_asyncio
 from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from httpx import AsyncClient, ASGITransport
+from app.main import app
+
 
 def _urls():
     base = f"{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}"
@@ -72,3 +75,9 @@ async def async_session(test_db_url):
     async with session_factory() as session:
         yield session
     await engine.dispose()
+
+@pytest_asyncio.fixture
+async def client():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac

@@ -17,8 +17,12 @@ class Settings(BaseSettings):
 
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    JWT_SECRET: str = "change-me"
+    JWT_SECRET: str = ""
     JWT_EXPIRES_SEC: int = 3600
+    REFRESH_EXPIRES_SEC: int = 30 * 24 * 3600
+    REFRESH_REDIS_PREFIX: str = "rtk:"
+    REFRESH_USER_SET_PREFIX: str = "rtu:"
+    REFRESH_HASH_PEPPER: str | None = None
 
     GOOGLE_CLIENT_IDS: str = ""
     GOOGLE_CLIENT_SECRET: str | None = None # 웹 클라에만 필요
