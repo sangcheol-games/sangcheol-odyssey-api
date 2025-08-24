@@ -38,9 +38,12 @@ async def health_check() -> BaseResponse:
 async def sc_domain_error_handler(_request: Request, exc: SCDomainError) -> JSONResponse:
     code_map = {
         DomainErrorCode.NICKNAME_ALREADY_SET: status.HTTP_400_BAD_REQUEST,
+        DomainErrorCode.NICKNAME_CONFLICT: status.HTTP_409_CONFLICT,
         DomainErrorCode.USER_NOT_FOUND: status.HTTP_404_NOT_FOUND,
         DomainErrorCode.INVALID_UID: status.HTTP_422_UNPROCESSABLE_ENTITY,
         DomainErrorCode.INVALID_NICKNAME: status.HTTP_422_UNPROCESSABLE_ENTITY,
+        DomainErrorCode.IDENTITY_CONFLICT: status.HTTP_409_CONFLICT,
+        DomainErrorCode.PROVIDER_ALREADY_LINKED: status.HTTP_400_BAD_REQUEST,
     }
     status_code = code_map.get(exc.code, status.HTTP_400_BAD_REQUEST)
     return JSONResponse(

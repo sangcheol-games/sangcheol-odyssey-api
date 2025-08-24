@@ -13,6 +13,7 @@ from app.models.identity import Identity, Provider
 from app.core.config import settings
 from app.utils.jwks_cache import JWKSCache
 from app.utils.jwt_tools import issue_access_token
+from app.services.user_service import UserService
 
 GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs"
@@ -64,28 +65,12 @@ async def verify_google_id_token(id_token: str) -> GoogleIdClaims:
 async def handle_google_login(db: AsyncSession, claims: GoogleIdClaims) -> TokenResponse:
     if not claims.sub:
         raise HTTPException(status_code=400, detail="id_token missing sub")
-    id_repo = IdentityRepository(db)
-    user_repo = UserRepository(db)
-    identity = await id_repo.get_by_provider_sub(Provider.google.value, claims.sub)
-    if identity:
-        user = await user_repo.get(identity.user_id)
-        if not user:
-            raise HTTPException(status_code=400, detail="user not found for identity")
-        is_new_user = False
-    else:
-        user = User(uid=f"google:{claims.sub}", nickname=None)
-        await user_repo.add(user)
-        identity = Identity(
-            user_id=user.id,
-            provider=Provider.google.value,
-            provider_sub=claims.sub,
-            email=claims.email,
-            email_verified=claims.email_verified,
-            profile_json=claims.model_dump(exclude_none=True),
-        )
-        await id_repo.add(identity)
-        is_new_user = True
-    await db.commit()
+    svc = UserService(db)
+    user, is_new_user = await svc.create_or_get_social_user(
+        provider=Provider.google,
+        provider_sub=claims.sub,
+        claims=claims.model_dump(exclude_none=True),
+    )
     access_token = issue_access_token(str(user.id))
     return TokenResponse(
         access_token=access_token,

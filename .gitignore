@@ -199,4 +199,5 @@ pyrightconfig.json
 
 *.patch
 .tools/
+.dev/
 # End of https://www.toptal.com/developers/gitignore/api/python,redis,visualstudiocode

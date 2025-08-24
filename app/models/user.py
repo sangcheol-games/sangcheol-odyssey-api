@@ -13,7 +13,7 @@ class User(Base, TimestampedMixin):
     __tablename__ = "user"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid4)
-    uid: Mapped[str] = mapped_column(String(50), unique=True, index=True)
+    uid: Mapped[str | None] = mapped_column(String(50), unique=True, index=True, nullable=True)
     nickname: Mapped[str | None] = mapped_column(String(100))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 

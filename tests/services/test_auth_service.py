@@ -11,6 +11,7 @@ from fastapi import HTTPException
 
 from app.schemas.google_oauth import GoogleTokenRequest, GoogleIdClaims
 from app.services import auth_service
+from app.services import user_service as _user_service_mod
 
 
 @pytest.mark.asyncio
@@ -145,8 +146,9 @@ async def test_handle_google_login_existing_user(monkeypatch):
     )
     user_repo = SimpleNamespace(get=AsyncMock(return_value=user), add=AsyncMock())
 
-    monkeypatch.setattr(auth_service, "IdentityRepository", lambda db: id_repo)
-    monkeypatch.setattr(auth_service, "UserRepository", lambda db: user_repo)
+    monkeypatch.setattr(_user_service_mod, "IdentityRepository", lambda db: id_repo)
+    monkeypatch.setattr(_user_service_mod, "UserRepository", lambda db: user_repo)
+
     monkeypatch.setattr(auth_service, "issue_access_token", lambda uid: f"token-{uid}")
 
     db = SimpleNamespace(commit=AsyncMock())
@@ -171,11 +173,18 @@ async def test_handle_google_login_new_user(monkeypatch):
     )
     user_repo = SimpleNamespace(get=AsyncMock(), add=AsyncMock(side_effect=add_user))
 
-    monkeypatch.setattr(auth_service, "IdentityRepository", lambda db: id_repo)
-    monkeypatch.setattr(auth_service, "UserRepository", lambda db: user_repo)
+    from app.services import user_service as _user_service_mod
+    monkeypatch.setattr(_user_service_mod, "IdentityRepository", lambda db: id_repo)
+    monkeypatch.setattr(_user_service_mod, "UserRepository", lambda db: user_repo)
+
     monkeypatch.setattr(auth_service, "issue_access_token", lambda uid: f"token-{uid}")
 
-    db = SimpleNamespace(commit=AsyncMock())
+    db = SimpleNamespace(
+        commit=AsyncMock(),
+        flush=AsyncMock(),
+        rollback=AsyncMock(),
+    )
+
     claims = GoogleIdClaims(sub="sub123", email="e@example.com", email_verified=True)
 
     resp = await auth_service.handle_google_login(db, claims)
@@ -183,6 +192,7 @@ async def test_handle_google_login_new_user(monkeypatch):
     assert resp.access_token.startswith("token-")
     id_repo.add.assert_awaited_once()
     user_repo.add.assert_awaited_once()
+    db.flush.assert_awaited()
     db.commit.assert_awaited_once()
 
 
