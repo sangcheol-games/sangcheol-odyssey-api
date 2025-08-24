@@ -4,13 +4,18 @@ from __future__ import annotations
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-from app.core.config import settings
 from app.db.base import target_metadata
 
+def _get_url() -> str:
+    cfg = context.config
+    url = cfg.get_main_option("sqlalchemy.url")
+    if url:
+        return url
+    from app.core.config import settings
+    return settings.db_url_sync
 
 def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode."""
-    url = settings.db_url_sync
+    url = _get_url()
     print(f"*** ALEMBIC OFFLINE url={url}")
     context.configure(
         url=url,
@@ -23,10 +28,8 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
-
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    url = settings.db_url_sync
+    url = _get_url()
     print(f"*** ALEMBIC ONLINE url={url}")
     connectable = create_engine(url, poolclass=pool.NullPool)
     with connectable.connect() as connection:
@@ -38,7 +41,6 @@ def run_migrations_online() -> None:
         )
         with context.begin_transaction():
             context.run_migrations()
-
 
 if context.is_offline_mode():
     run_migrations_offline()
