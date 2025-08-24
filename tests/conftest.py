@@ -76,8 +76,8 @@ async def async_session(test_db_url):
         yield session
     await engine.dispose()
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client():
-    transport = ASGITransport(app=app, lifespan="on")
+    transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
