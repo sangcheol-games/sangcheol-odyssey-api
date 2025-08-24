@@ -6,19 +6,22 @@ from authlib.jose import JsonWebToken, JsonWebKey
 
 from app.schemas.google_oauth import GoogleTokenRequest, GoogleTokenResponse, GoogleIdClaims
 from app.schemas.auth_io import TokenResponse
-from app.repositories.user_repo import UserRepository
-from app.repositories.identity_repo import IdentityRepository
-from app.models.user import User
-from app.models.identity import Identity, Provider
+from app.models.identity import Provider
 from app.core.config import settings
 from app.utils.jwks_cache import JWKSCache
 from app.utils.jwt_tools import issue_access_token
 from app.services.user_service import UserService
 
+from app.utils.redis_client import get_redis
+from app.utils.refresh_tools import (
+    generate_refresh_plain, hash_refresh,
+    redis_token_key, redis_user_set_key,
+    now_ts, exp_ts, to_json, from_json,
+)
+
 GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 GOOGLE_JWKS_URI = "https://www.googleapis.com/oauth2/v3/certs"
 GOOGLE_ISS = {"https://accounts.google.com", "accounts.google.com"}
-_rs256 = JsonWebToken(["RS256"])
 
 _jwks_cache = JWKSCache(GOOGLE_JWKS_URI)
 _rs256 = JsonWebToken(["RS256"])
@@ -71,10 +74,68 @@ async def handle_google_login(db: AsyncSession, claims: GoogleIdClaims) -> Token
         provider_sub=claims.sub,
         claims=claims.model_dump(exclude_none=True),
     )
-    access_token = issue_access_token(str(user.id))
+    user_id = str(user.id)
+
+    access_token = issue_access_token(user_id)
+
+    r = get_redis()
+    plain = generate_refresh_plain()
+    h = hash_refresh(plain)
+    key = redis_token_key(h)
+    record = {"user_id": user_id, "iat": now_ts(), "exp": exp_ts()}
+    await r.setex(key, int(settings.REFRESH_EXPIRES_SEC), to_json(record))
+    await r.sadd(redis_user_set_key(user_id), h)
+
+    await db.commit()
     return TokenResponse(
         access_token=access_token,
-        refresh_token=None,
+        refresh_token=plain,
         expires_in=int(settings.JWT_EXPIRES_SEC),
         is_new_user=is_new_user,
     )
+
+async def rotate_refresh_and_issue(db: AsyncSession, refresh_plain: str) -> TokenResponse:
+    if not refresh_plain:
+        raise HTTPException(status_code=400, detail="missing refresh_token")
+
+    r = get_redis()
+    h = hash_refresh(refresh_plain)
+    key = redis_token_key(h)
+
+    record_json = await r.getdel(key)
+    if not record_json:
+        raise HTTPException(status_code=401, detail="invalid or used refresh_token")
+
+    rec = from_json(record_json)
+    user_id = rec["user_id"]
+
+    await r.srem(redis_user_set_key(user_id), h)
+
+    access = issue_access_token(user_id)
+
+    new_plain = generate_refresh_plain()
+    new_h = hash_refresh(new_plain)
+    new_key = redis_token_key(new_h)
+    new_rec = {"user_id": user_id, "iat": now_ts(), "exp": exp_ts()}
+    await r.setex(new_key, int(settings.REFRESH_EXPIRES_SEC), to_json(new_rec))
+    await r.sadd(redis_user_set_key(user_id), new_h)
+
+    await db.commit()
+    return TokenResponse(
+        access_token=access,
+        refresh_token=new_plain,
+        expires_in=int(settings.JWT_EXPIRES_SEC),
+        is_new_user=False,
+    )
+
+async def logout_all_refresh(user_id: str) -> dict:
+    r = get_redis()
+    set_key = redis_user_set_key(user_id)
+    hashes = await r.smembers(set_key)
+    if hashes:
+        pipe = r.pipeline()
+        for h in hashes:
+            pipe.delete(redis_token_key(h))
+        pipe.delete(set_key)
+        await pipe.execute()
+    return {"message": "ok"}
