@@ -13,7 +13,6 @@ from app.utils.jwks_cache import JWKSCache
 from app.utils.jwt_tools import issue_access_token
 from app.services.user_service import UserService
 
-from app.utils.redis_client import get_redis
 from app.utils.refresh_tools import (
     generate_refresh_plain, hash_refresh,
     redis_token_key, redis_user_set_key,
@@ -35,7 +34,7 @@ async def exchange_google_token(req: GoogleTokenRequest) -> GoogleTokenResponse:
     return GoogleTokenResponse.model_validate(r.json())
 
 
-async def verify_google_id_token(id_token: str) -> GoogleIdClaims:
+async def verify_google_id_token(id_token: str, expected_nonce: str | None = None) -> GoogleIdClaims:
     jwks = await _jwks_cache.get()
     if not isinstance(jwks, dict) or "keys" not in jwks:
         raise HTTPException(status_code=503, detail="JWKS not available")
@@ -63,6 +62,10 @@ async def verify_google_id_token(id_token: str) -> GoogleIdClaims:
             status_code=400,
             detail=f"INVALID_AUDIENCE: token aud={aud_in_token}, allowed={audiences}"
         ) from e
+
+    if expected_nonce is not None:
+        if claims.get("nonce") != expected_nonce:
+            raise HTTPException(status_code=400, detail="INVALID_NONCE")
 
     return GoogleIdClaims.model_validate(claims)
 
