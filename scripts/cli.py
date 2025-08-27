@@ -4,10 +4,10 @@ import alembic.config
 import uvicorn
 
 def start_dev_server() -> None:
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=5000, reload=True)
 
 def start_prod_server() -> None:
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=5000)
 
 def run_migrations() -> None:
     alembic.config.main(argv=["upgrade", "head"])

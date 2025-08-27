@@ -70,11 +70,11 @@ uv run serve
 ### 6. 테스트 & Docs 페이지
 
 - `uv run pytest`
-- `uv run dev` 후  **http://localhost:8000/docs** 접속 (API docs page)
+- `uv run dev` 후  **http://localhost:5000/docs** 접속 (API docs page)
 - 브라우저 접속이 안 되면 터미널에서 확인:
   ```bash
-  curl http://localhost:8000/health       # {"message":"healthy"}
-  curl http://localhost:8000/v1/ping      # {"message":"pong"}
+  curl http://localhost:5000/health       # {"message":"healthy"}
+  curl http://localhost:5000/v1/ping      # {"message":"pong"}
 
 **WSL 사용 시(예외 처리)**
 
@@ -84,7 +84,7 @@ uv run serve
   # WSL 터미널에서 IP 확인
   hostname -I | awk '{print $1}'
   # 브라우저에서 접속
-  http://<WSL_IP>:8000/docs
+  http://<WSL_IP>:5000/docs
   ```
 
 ---

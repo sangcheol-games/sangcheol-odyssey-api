@@ -5,7 +5,7 @@ class Settings(BaseSettings):
 
     APP_ENV: str = "dev"
     APP_HOST: str = "0.0.0.0"
-    APP_PORT: int = 8000
+    APP_PORT: int = 5000
 
     API_V1_STR: str = "/v1"
 

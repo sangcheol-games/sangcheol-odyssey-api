@@ -27,7 +27,7 @@ def _patch_settings(monkeypatch):
     monkeypatch.setenv("REFRESH_HASH_PEPPER", "pepper")
     monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
     monkeypatch.setenv("GOOGLE_CLIENT_ID_WEB", "cid")
-    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/v1/auth/google/callback")
+    monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:5000/v1/auth/google/callback")
     monkeypatch.setenv("GOOGLE_CLIENT_IDS", "cid")
     from app.core import config as _cfg
     _cfg.settings = _cfg.Settings()

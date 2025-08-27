@@ -219,12 +219,12 @@ if grep -qi microsoft /proc/version 2>/dev/null; then
   WSL_IP="$(hostname -I | awk '{print $1}')"
   echo -e "${GREEN}Next steps:${NC}
   - Run server:  ${BLUE}uv run dev${NC}
-  - Docs:        http://localhost:8000/docs
+  - Docs:        http://localhost:5000/docs
   - If WSL:      Detected WSL. Open from Windows:
-                 ${BLUE}http://${WSL_IP}:8000/docs${NC}
-                 (Health: http://${WSL_IP}:8000/health)"
+                 ${BLUE}http://${WSL_IP}:5000/docs${NC}
+                 (Health: http://${WSL_IP}:5000/health)"
 else
   echo -e "${GREEN}Next steps:${NC}
   - Run server:  ${BLUE}uv run dev${NC}
-  - Docs:        http://localhost:8000/docs"
+  - Docs:        http://localhost:5000/docs"
 fi
