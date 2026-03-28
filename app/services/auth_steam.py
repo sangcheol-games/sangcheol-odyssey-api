@@ -11,26 +11,32 @@ from app.schemas.auth_io import TokenResponse
 STEAM_AUTHENTICATE_URL = "https://api.steampowered.com/ISteamUserAuth/AuthenticateUserTicket/v1/"
 
 async def handle_steam_login(db: AsyncSession, ticket: str) -> TokenResponse:
-    if not settings.STEAM_WEB_API_KEY or not settings.STEAM_APP_ID:
-        raise HTTPException(status_code=500, detail="SERVER_MISCONFIG: Steam credentials missing")
+    if not settings.STEAM_WEB_API_KEY:
+        raise HTTPException(
+            status_code=500, 
+            detail="SERVER_MISCONFIG: STEAM_WEB_API_KEY is missing. Please check your .env file."
+        )
+    
+    steam_app_id = settings.STEAM_APP_ID or "4566350"
 
     async with httpx.AsyncClient(timeout=10) as client:
         r = await client.get(
             STEAM_AUTHENTICATE_URL,
             params={
                 "key": settings.STEAM_WEB_API_KEY,
-                "appid": settings.STEAM_APP_ID,
+                "appid": steam_app_id,
                 "ticket": ticket,
             }
         )
 
     if r.status_code != 200:
-        raise HTTPException(status_code=400, detail="Steam authentication request failed")
+        raise HTTPException(status_code=400, detail=f"Steam authentication request failed: {r.status_code}")
 
     data = r.json()
     params = data.get("response", {}).get("params", {})
     if "steamid" not in params:
-        error_desc = data.get("response", {}).get("error", {}).get("errordesc", "Unknown error")
+        error_info = data.get("response", {}).get("error", {})
+        error_desc = error_info.get("errordesc", "Unknown error")
         raise HTTPException(status_code=400, detail=f"Invalid steam ticket: {error_desc}")
 
     steamid = params["steamid"]
