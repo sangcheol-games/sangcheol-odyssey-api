@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str | None = None # 웹 클라에만 필요
     GOOGLE_CLIENT_ID_WEB: str | None = None # 웹 클라에만 필요
 
+    STEAM_WEB_API_KEY: str | None = None
+    STEAM_APP_ID: str | None = "4566350"
+
     @property
     def db_url_async(self) -> str:
         return (

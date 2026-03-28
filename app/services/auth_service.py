@@ -66,17 +66,7 @@ async def verify_google_id_token(id_token: str) -> GoogleIdClaims:
 
     return GoogleIdClaims.model_validate(claims)
 
-async def handle_google_login(db: AsyncSession, claims: GoogleIdClaims) -> TokenResponse:
-    if not claims.sub:
-        raise HTTPException(status_code=400, detail="id_token missing sub")
-    svc = UserService(db)
-    user, is_new_user = await svc.create_or_get_social_user(
-        provider=Provider.google,
-        provider_sub=claims.sub,
-        claims=claims.model_dump(exclude_none=True),
-    )
-    user_id = str(user.id)
-
+async def issue_auth_tokens(user_id: str, is_new_user: bool) -> TokenResponse:
     access_token = issue_access_token(user_id)
 
     plain = generate_refresh_plain()
@@ -93,6 +83,17 @@ async def handle_google_login(db: AsyncSession, claims: GoogleIdClaims) -> Token
         expires_in=int(settings.JWT_EXPIRES_SEC),
         is_new_user=is_new_user,
     )
+
+async def handle_google_login(db: AsyncSession, claims: GoogleIdClaims) -> TokenResponse:
+    if not claims.sub:
+        raise HTTPException(status_code=400, detail="id_token missing sub")
+    svc = UserService(db)
+    user, is_new_user = await svc.create_or_get_social_user(
+        provider=Provider.google,
+        provider_sub=claims.sub,
+        claims=claims.model_dump(exclude_none=True),
+    )
+    return await issue_auth_tokens(str(user.id), is_new_user)
 
 async def rotate_refresh_and_issue(db: AsyncSession, refresh_plain: str) -> TokenResponse:
     if not refresh_plain:
