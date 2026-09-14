@@ -1,6 +1,5 @@
 import asyncio
 import json
-import os
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -10,7 +9,6 @@ from fakeredis import aioredis as _fakeredis
 
 from app.main import app
 from app.core import config as cfg
-from app.utils.redis_client import get_redis as _get_redis
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -29,6 +27,8 @@ def _patch_settings(monkeypatch):
     monkeypatch.setenv("GOOGLE_CLIENT_ID_WEB", "cid")
     monkeypatch.setenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/v1/auth/google/callback")
     monkeypatch.setenv("GOOGLE_CLIENT_IDS", "cid")
+    monkeypatch.setenv("STEAM_WEB_API_KEY", "test-steam-web-api-key")
+    monkeypatch.setenv("STEAM_APP_ID", "4566350")
     from app.core import config as _cfg
     _cfg.settings = _cfg.Settings()
 
@@ -64,6 +64,8 @@ def test_db_url():
 
 @pytest_asyncio.fixture
 async def async_session():
+    from app.core.session import get_session
+
     engine = create_async_engine(
         cfg.settings.db_url_async,
         pool_pre_ping=True,
@@ -74,8 +76,14 @@ async def async_session():
         await conn.execute(sa.text('TRUNCATE TABLE "identity","user" RESTART IDENTITY CASCADE'))
     SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with SessionLocal() as session:
+        async def _override_get_session():
+            yield session
+
+        app.dependency_overrides[get_session] = _override_get_session
         try:
             yield session
         finally:
+            app.dependency_overrides.pop(get_session, None)
             await session.rollback()
     await engine.dispose()
+
