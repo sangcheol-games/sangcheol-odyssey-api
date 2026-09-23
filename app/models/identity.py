@@ -20,7 +20,7 @@ class Identity(Base, TimestampedMixin):
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid4)
-    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), index=True, nullable=False)
+    user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
 
     provider: Mapped[str] = mapped_column(String(32), nullable=False)
     provider_sub: Mapped[str] = mapped_column(String(128), nullable=False)
