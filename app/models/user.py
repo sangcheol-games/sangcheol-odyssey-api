@@ -10,7 +10,7 @@ from app.db.mixins import TimestampedMixin, _uuid4
 from app.models.identity import Identity
 
 class User(Base, TimestampedMixin):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid4)
     uid: Mapped[str | None] = mapped_column(String(50), unique=True, index=True, nullable=True)

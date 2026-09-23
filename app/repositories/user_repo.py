@@ -44,7 +44,7 @@ class UserRepository:
 
     async def update_last_login(self, user_id: UUID) -> None:
         await self.db.execute(
-            text('UPDATE "user" SET last_login_at = NOW() AT TIME ZONE \'UTC\' WHERE id = :id'),
+            text("UPDATE users SET last_login_at = NOW() AT TIME ZONE 'UTC' WHERE id = :id"),
             {"id": str(user_id)},
         )
 

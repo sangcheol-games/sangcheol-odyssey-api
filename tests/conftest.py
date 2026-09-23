@@ -19,6 +19,7 @@ def event_loop():
 @pytest.fixture(autouse=True)
 def _patch_settings(monkeypatch):
     monkeypatch.setenv("APP_ENV", "test")
+    monkeypatch.setenv("DB_NAME", "sangcheol_test")
     monkeypatch.setenv("JWT_SECRET", "test-secret")
     monkeypatch.setenv("JWT_EXPIRES_SEC", "3600")
     monkeypatch.setenv("REFRESH_EXPIRES_SEC", "2592000")
@@ -60,20 +61,21 @@ async def client(_override_redis, event_loop):
 
 @pytest.fixture(scope="session")
 def test_db_url():
-    return cfg.settings.db_url_async
+    return f"postgresql+asyncpg://{cfg.settings.DB_USER}:{cfg.settings.DB_PASSWORD}@{cfg.settings.DB_HOST}:{cfg.settings.DB_PORT}/sangcheol_test"
 
 @pytest_asyncio.fixture
 async def async_session():
     from app.core.session import get_session
 
+    db_url = f"postgresql+asyncpg://{cfg.settings.DB_USER}:{cfg.settings.DB_PASSWORD}@{cfg.settings.DB_HOST}:{cfg.settings.DB_PORT}/sangcheol_test"
     engine = create_async_engine(
-        cfg.settings.db_url_async,
+        db_url,
         pool_pre_ping=True,
         pool_recycle=1800,
         json_serializer=lambda o: json.dumps(o),
     )
     async with engine.begin() as conn:
-        await conn.execute(sa.text('TRUNCATE TABLE "identity","user" RESTART IDENTITY CASCADE'))
+        await conn.execute(sa.text('TRUNCATE TABLE "identity","users" RESTART IDENTITY CASCADE'))
     SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
     async with SessionLocal() as session:
         async def _override_get_session():
